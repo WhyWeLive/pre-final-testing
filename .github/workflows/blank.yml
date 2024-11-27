@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install node dependencies
+        run: npm install
+      - name: check node dependencies
+        run: npx prettier . --check
+  build:
+    needs: [check]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build docker image
+        run: docker build -t ghcr.io/whywelive/pre-final-testing/pre-final-node:latest .
+      - name: Push docker image
+        run: docker push ghcr.io/whywelive/pre-final-testing/pre-final-node:latest
+      
